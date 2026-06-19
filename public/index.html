@@ -8,8 +8,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js CDN for interactive premium charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <!-- Confetti Overlay Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Animated Blur Background Blobs -->
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    <div class="bg-blob blob-3"></div>
+
     <div class="app-container">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
@@ -20,19 +30,27 @@
             
             <nav class="nav-menu">
                 <button class="nav-item active" data-tab="dashboard">
-                    <span class="nav-icon">📊</span>
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                    </span>
                     <span class="nav-label">Dashboard</span>
                 </button>
                 <button class="nav-item" data-tab="calculator">
-                    <span class="nav-icon">🧮</span>
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+                    </span>
                     <span class="nav-label">Calculator</span>
                 </button>
                 <button class="nav-item" data-tab="habits">
-                    <span class="nav-icon">⚡</span>
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    </span>
                     <span class="nav-label">Actions & Habits</span>
                 </button>
                 <button class="nav-item" data-tab="insights">
-                    <span class="nav-icon">💡</span>
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </span>
                     <span class="nav-label">Insights & Badges</span>
                 </button>
             </nav>
@@ -62,7 +80,7 @@
                 </div>
                 <div class="header-stats">
                     <div class="stat-bubble">
-                        <span class="bubble-label">CO2e Saved</span>
+                        <span class="bubble-label">CO2e Saved Today</span>
                         <span class="bubble-value" id="header-saved-co2">0.0 kg</span>
                     </div>
                     <div class="stat-bubble">
@@ -86,7 +104,7 @@
                                 </svg>
                                 <div class="gauge-center">
                                     <span class="score-value" id="dashboard-co2-val">4.8</span>
-                                    <span class="score-unit">Tons CO2e</span>
+                                    <span class="score-unit">Tons CO2e/yr</span>
                                 </div>
                             </div>
                         </div>
@@ -98,54 +116,12 @@
                         </div>
                     </div>
 
-                    <!-- Category Breakdown Card -->
+                    <!-- Category Breakdown Card (Interactive Chart) -->
                     <div class="card breakdown-card">
                         <h3>Emissions Breakdown</h3>
-                        <div class="breakdown-list">
-                            <!-- Energy -->
-                            <div class="breakdown-item">
-                                <div class="breakdown-info">
-                                    <span class="item-icon">🏠</span>
-                                    <span class="item-name">Home Energy</span>
-                                    <span class="item-value" id="breakdown-energy-val">1.8 Tons</span>
-                                </div>
-                                <div class="progress-track">
-                                    <div class="progress-bar energy-bar" id="breakdown-energy-bar" style="width: 37%"></div>
-                                </div>
-                            </div>
-                            <!-- Transport -->
-                            <div class="breakdown-item">
-                                <div class="breakdown-info">
-                                    <span class="item-icon">🚗</span>
-                                    <span class="item-name">Transportation</span>
-                                    <span class="item-value" id="breakdown-transport-val">2.2 Tons</span>
-                                </div>
-                                <div class="progress-track">
-                                    <div class="progress-bar transport-bar" id="breakdown-transport-bar" style="width: 45%"></div>
-                                </div>
-                            </div>
-                            <!-- Diet -->
-                            <div class="breakdown-item">
-                                <div class="breakdown-info">
-                                    <span class="item-icon">🍔</span>
-                                    <span class="item-name">Diet & Food</span>
-                                    <span class="item-value" id="breakdown-diet-val">0.6 Tons</span>
-                                </div>
-                                <div class="progress-track">
-                                    <div class="progress-bar diet-bar" id="breakdown-diet-bar" style="width: 13%"></div>
-                                </div>
-                            </div>
-                            <!-- Consumption/Waste -->
-                            <div class="breakdown-item">
-                                <div class="breakdown-info">
-                                    <span class="item-icon">🗑️</span>
-                                    <span class="item-name">Consumption & Waste</span>
-                                    <span class="item-value" id="breakdown-waste-val">0.2 Tons</span>
-                                </div>
-                                <div class="progress-track">
-                                    <div class="progress-bar waste-bar" id="breakdown-waste-bar" style="width: 5%"></div>
-                                </div>
-                            </div>
+                        <p class="card-subtitle" style="margin-bottom: 0.5rem;">Visual breakdown of your annual footprint categories.</p>
+                        <div class="chart-wrapper">
+                            <canvas id="breakdown-chart"></canvas>
                         </div>
                     </div>
 
@@ -158,9 +134,9 @@
                     </div>
 
                     <!-- Logging quick action -->
-                    <div class="card quick-action-card">
+                    <div class="card quick-action-card full-width">
                         <h3>Quick Action Logger</h3>
-                        <p>Did something eco-friendly today? Log it instantly to save carbon and earn XP!</p>
+                        <p class="card-subtitle">Did something eco-friendly today? Log it instantly to save carbon and earn XP!</p>
                         <div class="quick-buttons">
                             <button class="quick-log-btn" data-action="transit">🚌 Commuted via Transit (+25 XP)</button>
                             <button class="quick-log-btn" data-action="meal">🥗 Plant-based Meal (+15 XP)</button>
@@ -407,6 +383,62 @@
                         <h3>Personalized Insights</h3>
                         <div class="advice-content" id="personalized-advice">
                             <!-- Filled dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- National Comparison Chart Card -->
+                    <div class="card comparison-card full-width">
+                        <h3>Compare Nationally</h3>
+                        <p class="card-subtitle">See how your annual carbon footprint contrasts with national per-capita averages.</p>
+                        <div class="comparison-header">
+                            <label for="country-select">Select Reference Country:</label>
+                            <select id="country-select" style="max-width: 250px; margin-left: 10px; display: inline-block;">
+                                <option value="US" selected>🇺🇸 United States (Avg: 16.0T)</option>
+                                <option value="DE">🇩🇪 Germany (Avg: 7.9T)</option>
+                                <option value="UK">🇬🇧 United Kingdom (Avg: 5.2T)</option>
+                                <option value="CN">🇨🇳 China (Avg: 7.4T)</option>
+                                <option value="IN">🇮🇳 India (Avg: 1.9T)</option>
+                                <option value="GL">🌍 Global Average (Avg: 4.5T)</option>
+                            </select>
+                        </div>
+                        <div class="chart-wrapper" style="margin-top: 1.5rem;">
+                            <canvas id="comparison-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Offset Simulator Card -->
+                    <div class="card offset-card full-width">
+                        <h3>🌿 Offset Your Footprint (Net-Zero Calculator)</h3>
+                        <p class="card-subtitle">Simulate neutralizing your carbon emissions through verified environmental offsets.</p>
+                        
+                        <div class="offset-slider-container">
+                            <div class="form-group">
+                                <label for="offset-slider" style="display: flex; justify-content: space-between;">
+                                    <span>Offset Percentage Commitment</span>
+                                    <span id="offset-percent-display" style="color: var(--accent); font-weight: 800; font-size: 1.15rem;">0%</span>
+                                </label>
+                                <div class="offset-track-wrapper">
+                                    <input type="range" id="offset-slider" min="0" max="100" value="0" style="width: 100%;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="offset-stats-grid">
+                            <div class="offset-stat-card">
+                                <span class="offset-stat-label">Offset Investment Cost</span>
+                                <span class="offset-stat-value" id="offset-cost-display">$0.00 / yr</span>
+                                <span class="offset-stat-sub">Estimated at $15.00 / Ton</span>
+                            </div>
+                            <div class="offset-stat-card">
+                                <span class="offset-stat-label">Afforestation Impact</span>
+                                <span class="offset-stat-value" id="offset-trees-display">0 Trees</span>
+                                <span class="offset-stat-sub">Assuming 22kg absorption/tree/yr</span>
+                            </div>
+                            <div class="offset-stat-card">
+                                <span class="offset-stat-label">Net Footprint Result</span>
+                                <span class="offset-stat-value" id="offset-net-val" style="color: var(--color-danger)">4.8 Tons</span>
+                                <span class="offset-stat-sub" id="offset-status-badge">Climate Active</span>
+                            </div>
                         </div>
                     </div>
 
