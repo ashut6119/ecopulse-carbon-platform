@@ -1,12 +1,29 @@
 ﻿import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import helmet from 'helmet';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+// Set up security headers with helmet
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "script-src": ["'self'", "https://cdn.jsdelivr.net", "'unsafe-inline'"],
+      "style-src": ["'self'", "https://fonts.googleapis.com", "'unsafe-inline'"],
+      "font-src": ["'self'", "https://fonts.gstatic.com"],
+      "img-src": ["'self'", "data:"]
+    }
+  }
+}));
+
+// Disable X-Powered-By header to prevent server technology disclosure
+app.disable('x-powered-by');
 
 app.use(express.static(path.join(__dirname, 'public')));
 

@@ -8,8 +8,8 @@
     --accent-glow: rgba(16, 185, 129, 0.18);
     
     --text-primary: #F9FAFB;
-    --text-secondary: #9CA3AF;
-    --text-muted: #6B7280;
+    --text-secondary: #D1D5DB; /* Brightened for WCAG contrast compliance */
+    --text-muted: #9CA3AF;     /* Brightened for WCAG contrast compliance */
     
     --border-color: rgba(255, 255, 255, 0.06);
     --border-glow: rgba(16, 185, 129, 0.22);
@@ -44,6 +44,22 @@ body {
     overflow-x: hidden;
     min-height: 100vh;
     position: relative;
+}
+
+/* Accessibility visible focus styles for keyboard users */
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input[type="range"]:focus-visible,
+.radio-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+    box-shadow: 0 0 12px var(--accent-glow);
+}
+
+/* Prevents focus rings on standard click but allows screen-reader tabpanels focus */
+.tab-content:focus {
+    outline: none;
 }
 
 /* Ambient Blur Background Blobs */
@@ -367,7 +383,7 @@ body {
 
 .card-subtitle {
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     margin-top: -0.75rem;
     margin-bottom: 1.5rem;
 }
@@ -473,6 +489,33 @@ body {
     margin-top: 0.25rem;
 }
 
+/* Reduction Goal Card */
+.goal-progress-container {
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem;
+}
+
+.goal-status-box {
+    background: rgba(16, 185, 129, 0.06);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: var(--accent);
+    transition: background 0.3s, border 0.3s, color 0.3s;
+}
+
+.goal-status-box.achieved {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid var(--accent);
+    color: #34D399;
+}
+
+.goal-status-box.behind {
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: var(--color-danger);
+}
+
 /* Category Breakdown Chart wrapper */
 .chart-wrapper {
     position: relative;
@@ -516,7 +559,7 @@ body {
 /* Recommendations Card */
 .recommendations-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(1, 1fr);
     gap: 1rem;
 }
 

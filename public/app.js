@@ -1,222 +1,226 @@
-﻿// State Management
-let appState = {
-    xp: 0,
-    co2SavedToday: 0.0,
-    activeHabits: [],
-    profile: {
-        electricityBill: 80,
-        cleanEnergy: 20,
-        heatingFuel: 'gas',
-        commuteDistance: 150,
-        carType: 'gasoline',
-        transitDistance: 30,
-        flights: 6,
-        diet: 'mediumMeat',
-        localFood: 30,
-        wasteRecycling: 'some',
-        spending: 200,
-        hasCalculated: false
-    },
-    offsetPercent: 0, // 0 to 100
-    selectedCountry: 'US',
-    history: []
-};
+﻿(function() {
+    "use strict";
 
-// Carbon Conversion Factors
-const factors = {
-    electricityRate: 0.15,
-    electricityCo2: 0.385,
-    heatingEmissions: {
-        electricity: 600,
-        gas: 1800,
-        oil: 2600,
-        lpg: 2000,
-        none: 0
-    },
-    carCo2: {
-        gasoline: 0.170,
-        diesel: 0.171,
-        hybrid: 0.101,
-        electric: 0.047,
-        none: 0
-    },
-    transitCo2: 0.06,
-    flightCo2: 90,
-    dietBase: {
-        heavyMeat: 2900,
-        mediumMeat: 2200,
-        lowMeat: 1700,
-        vegetarian: 1400,
-        vegan: 1100
-    },
-    wasteBase: {
-        none: 500,
-        some: 250,
-        all: 80
-    },
-    spendingCo2: 0.12,
-    publicServices: 500
-};
+    let appState = {
+        xp: 0,
+        co2SavedToday: 0.0,
+        activeHabits: [],
+        profile: {
+            electricityBill: 80,
+            cleanEnergy: 20,
+            heatingFuel: 'gas',
+            commuteDistance: 150,
+            carType: 'gasoline',
+            transitDistance: 30,
+            flights: 6,
+            diet: 'mediumMeat',
+            localFood: 30,
+            wasteRecycling: 'some',
+            spending: 200,
+            hasCalculated: false,
+            goalReduction: 20
+        },
+        offsetPercent: 0, // 0 to 100
+        selectedCountry: 'US',
+        history: []
+    };
 
-// Core Habits List
-const habitsData = [
-    { id: 'ledBulbs', name: 'Switch to LED Lighting', impact: 'Medium', saving: 0.25, icon: '💡', desc: 'Replace halogen bulbs with energy-efficient LEDs.' },
-    { id: 'compost', name: 'Compost Organic Waste', impact: 'Low', saving: 0.15, icon: '🍎', desc: 'Compost scraps to prevent methane emissions in landfills.' },
-    { id: 'lineDry', name: 'Line Dry Clothes', impact: 'Medium', saving: 0.20, icon: '👕', desc: 'Avoid electric dryer usage by air drying.' },
-    { id: 'meatlessDays', name: 'Practice Meatless Mondays', impact: 'Medium', saving: 0.35, icon: '🥦', desc: 'Eat plant-based meals at least one day a week.' },
-    { id: 'thermostat', name: 'Optimized Thermostat (2°C offset)', impact: 'Medium', saving: 0.30, icon: '🌡️', desc: 'Keep home 2°C warmer in summer, cooler in winter.' },
-    { id: 'noPlastic', name: 'Zero Single-use Plastic', impact: 'Low', saving: 0.10, icon: '🥤', desc: 'Carry reusable bottles, bags, and cups.' },
-    { id: 'carpool', name: 'Commute via Carpool/Rideshare', impact: 'High', saving: 0.60, icon: '👥', desc: 'Share your commute with others to halve fuel emissions.' },
-    { id: 'solarPanels', name: 'Install Solar Panels', impact: 'High', saving: 1.50, icon: '☀️', desc: 'Use clean solar power for household electricity.' }
-];
+    // Carbon Conversion Factors
+    const factors = {
+        electricityRate: 0.15,
+        electricityCo2: 0.385,
+        heatingEmissions: {
+            electricity: 600,
+            gas: 1800,
+            oil: 2600,
+            lpg: 2000,
+            none: 0
+        },
+        carCo2: {
+            gasoline: 0.170,
+            diesel: 0.171,
+            hybrid: 0.101,
+            electric: 0.047,
+            none: 0
+        },
+        transitCo2: 0.06,
+        flightCo2: 90,
+        dietBase: {
+            heavyMeat: 2900,
+            mediumMeat: 2200,
+            lowMeat: 1700,
+            vegetarian: 1400,
+            vegan: 1100
+        },
+        wasteBase: {
+            none: 500,
+            some: 250,
+            all: 80
+        },
+        spendingCo2: 0.12,
+        publicServices: 500
+    };
 
-// Badges List
-const badgesData = [
-    { id: 'starter', name: 'Eco Starter', icon: '🌱', desc: 'Calculate your initial carbon footprint.' },
-    { id: 'carbonCutter', name: 'Carbon Cutter', icon: '✂️', desc: 'Maintain a carbon footprint under 4.0 Tons.' },
-    { id: 'parisTarget', name: 'Paris Champion', icon: '🏆', desc: 'Achieve the 2030 Paris Target of under 2.0 Tons!' },
-    { id: 'actionHero', name: 'Action Hero', icon: '🦸', desc: 'Reach level 2 by logging eco actions.' },
-    { id: 'habitGreen', name: 'Habitual Green', icon: '🌿', desc: 'Activate at least 3 core green habits.' },
-    { id: 'habitChamp', name: 'Habit Champion', icon: '👑', desc: 'Activate 6 or more core green habits.' },
-    { id: 'climateProtector', name: 'Climate Protector', icon: '🛡️', desc: 'Reach level 4 by actively saving carbon.' },
-    { id: 'wasteMaster', name: 'Waste Master', icon: '♻️', desc: 'Implement strict waste recycling habits.' }
-];
+    // Core Habits List
+    const habitsData = [
+        { id: 'ledBulbs', name: 'Switch to LED Lighting', impact: 'Medium', saving: 0.25, icon: '💡', desc: 'Replace halogen bulbs with energy-efficient LEDs.' },
+        { id: 'compost', name: 'Compost Organic Waste', impact: 'Low', saving: 0.15, icon: '🍎', desc: 'Compost scraps to prevent methane emissions in landfills.' },
+        { id: 'lineDry', name: 'Line Dry Clothes', impact: 'Medium', saving: 0.20, icon: '👕', desc: 'Avoid electric dryer usage by air drying.' },
+        { id: 'meatlessDays', name: 'Practice Meatless Mondays', impact: 'Medium', saving: 0.35, icon: '🥦', desc: 'Eat plant-based meals at least one day a week.' },
+        { id: 'thermostat', name: 'Optimized Thermostat (2°C offset)', impact: 'Medium', saving: 0.30, icon: '🌡️', desc: 'Keep home 2°C warmer in summer, cooler in winter.' },
+        { id: 'noPlastic', name: 'Zero Single-use Plastic', impact: 'Low', saving: 0.10, icon: '🥤', desc: 'Carry reusable bottles, bags, and cups.' },
+        { id: 'carpool', name: 'Commute via Carpool/Rideshare', impact: 'High', saving: 0.60, icon: '👥', desc: 'Share your commute with others to halve fuel emissions.' },
+        { id: 'solarPanels', name: 'Install Solar Panels', impact: 'High', saving: 1.50, icon: '☀️', desc: 'Use clean solar power for household electricity.' }
+    ];
 
-// Quick Action Savings Mapping
-const quickActions = {
-    transit: { name: 'Commuted via Transit', co2: 5.2, xp: 25, icon: '🚌' },
-    meal: { name: 'Plant-based Meal', co2: 3.1, xp: 15, icon: '🥗' },
-    unplug: { name: 'Unplugged Devices', co2: 0.5, xp: 10, icon: '🔌' },
-    recycle: { name: 'Sorted Waste', co2: 0.8, xp: 10, icon: '♻️' }
-};
+    // Badges List
+    const badgesData = [
+        { id: 'starter', name: 'Eco Starter', icon: '🌱', desc: 'Calculate your initial carbon footprint.' },
+        { id: 'carbonCutter', name: 'Carbon Cutter', icon: '✂️', desc: 'Maintain a carbon footprint under 4.0 Tons.' },
+        { id: 'parisTarget', name: 'Paris Champion', icon: '🏆', desc: 'Achieve the 2030 Paris Target of under 2.0 Tons!' },
+        { id: 'actionHero', name: 'Action Hero', icon: '🦸', desc: 'Reach level 2 by logging eco actions.' },
+        { id: 'habitGreen', name: 'Habitual Green', icon: '🌿', desc: 'Activate at least 3 core green habits.' },
+        { id: 'habitChamp', name: 'Habit Champion', icon: '👑', desc: 'Activate 6 or more core green habits.' },
+        { id: 'climateProtector', name: 'Climate Protector', icon: '🛡️', desc: 'Reach level 4 by actively saving carbon.' },
+        { id: 'wasteMaster', name: 'Waste Master', icon: '♻️', desc: 'Implement strict waste recycling habits.' }
+    ];
 
-// National Per-capita Averages (Tons CO2e / year)
-const countryAverages = {
-    US: 16.0,
-    DE: 7.9,
-    UK: 5.2,
-    CN: 7.4,
-    IN: 1.9,
-    GL: 4.5
-};
+    // Quick Action Savings Mapping
+    const quickActions = {
+        transit: { name: 'Commuted via Transit', co2: 5.2, xp: 25, icon: '🚌' },
+        meal: { name: 'Plant-based Meal', co2: 3.1, xp: 15, icon: '🥗' },
+        unplug: { name: 'Unplugged Devices', co2: 0.5, xp: 10, icon: '🔌' },
+        recycle: { name: 'Sorted Waste', co2: 0.8, xp: 10, icon: '♻️' }
+    };
 
-// Chart.js instances
-let breakdownChart = null;
-let comparisonChart = null;
+    // National Per-capita Averages (Tons CO2e / year)
+    const countryAverages = {
+        US: 16.0,
+        DE: 7.9,
+        UK: 5.2,
+        CN: 7.4,
+        IN: 1.9,
+        GL: 4.5
+    };
 
-// Confetti Particle System variables
-let confettiCanvas = null;
-let confettiCtx = null;
-let confettiParticles = [];
-let isConfettiRunning = false;
+    // Chart.js instances
+    let breakdownChart = null;
+    let comparisonChart = null;
 
-// Audio Context for sound synthesis
-let audioCtx = null;
+    // Confetti Particle System variables
+    let confettiCanvas = null;
+    let confettiCtx = null;
+    let confettiParticles = [];
+    let isConfettiRunning = false;
 
-// Initial Load & Event Binding
-document.addEventListener('DOMContentLoaded', () => {
-    loadState();
-    initUI();
-    setupTabNavigation();
-    setupSliders();
-    setupCalculatorForm();
-    setupQuickLogger();
-    setupOffsetSimulator();
-    renderHabitsList();
-    initConfetti();
-    updateDashboard();
-});
+    // Audio Context for sound synthesis
+    let audioCtx = null;
 
-// Load state from LocalStorage
-function loadState() {
-    const saved = localStorage.getItem('ecopulse_state');
-    if (saved) {
-        try {
-            appState = JSON.parse(saved);
-        } catch (e) {
-            console.error("Error parsing saved state, resetting...", e);
+    // Initial Load & Event Binding
+    document.addEventListener('DOMContentLoaded', () => {
+        loadState();
+        initUI();
+        setupTabNavigation();
+        setupKeyboardTabs();
+        setupSliders();
+        setupCalculatorForm();
+        setupQuickLogger();
+        setupOffsetSimulator();
+        renderHabitsList();
+        initConfetti();
+        updateDashboard();
+    });
+
+    // Load state from LocalStorage
+    function loadState() {
+        const saved = localStorage.getItem('ecopulse_state');
+        if (saved) {
+            try {
+                appState = JSON.parse(saved);
+            } catch (e) {
+                console.error("Error parsing saved state, resetting...", e);
+            }
         }
     }
-}
 
-// Save state to LocalStorage
-function saveState() {
-    localStorage.setItem('ecopulse_state', JSON.stringify(appState));
-}
-
-// Sound Effects Synthesizer (Web Audio API)
-function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Save state to LocalStorage
+    function saveState() {
+        localStorage.setItem('ecopulse_state', JSON.stringify(appState));
     }
-    if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
+
+    // Sound Effects Synthesizer (Web Audio API)
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
     }
-}
 
-function playTabSound() {
-    initAudio();
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(350, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(700, audioCtx.currentTime + 0.06);
-    
-    gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
-    
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.06);
-}
-
-function playPopSound() {
-    initAudio();
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(250, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.1);
-    
-    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-    
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.1);
-}
-
-function playChimeSound() {
-    initAudio();
-    if (!audioCtx) return;
-    
-    const playTone = (freq, time, dur) => {
+    function playTabSound() {
+        initAudio();
+        if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
+        
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, time);
-        gain.gain.setValueAtTime(0.06, time);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
-        osc.start(time);
-        osc.stop(time + dur);
-    };
-    
-    const t = audioCtx.currentTime;
-    playTone(523.25, t, 0.12);     // C5
-    playTone(659.25, t + 0.08, 0.12); // E5
-    playTone(783.99, t + 0.16, 0.18); // G5
-    playTone(1046.50, t + 0.28, 0.3); // C6
-}
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(350, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(700, audioCtx.currentTime + 0.06);
+        
+        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.06);
+    }
+
+    function playPopSound() {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.1);
+        
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playChimeSound() {
+        initAudio();
+        if (!audioCtx) return;
+        
+        const playTone = (freq, time, dur) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, time);
+            gain.gain.setValueAtTime(0.06, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+            osc.start(time);
+            osc.stop(time + dur);
+        };
+        
+        const t = audioCtx.currentTime;
+        playTone(523.25, t, 0.12);     // C5
+        playTone(659.25, t + 0.08, 0.12); // E5
+        playTone(783.99, t + 0.16, 0.18); // G5
+        playTone(1046.50, t + 0.28, 0.3); // C6
+    }
 
 // Confetti Particle System
 function initConfetti() {
@@ -337,6 +341,9 @@ function initUI() {
     // Setup Offset slider
     document.getElementById('offset-slider').value = appState.offsetPercent;
     
+    // Setup Goal slider
+    document.getElementById('goal-slider').value = appState.profile.goalReduction;
+    
     // Update labels display
     updateSliderLabelDisplays();
     updateProfileWidget();
@@ -362,6 +369,15 @@ function setupSliders() {
             display.textContent = `${slider.prefix}${input.value}${slider.suffix}`;
         });
     });
+    
+    // Goal Slider Listener
+    const goalSlider = document.getElementById('goal-slider');
+    const goalDisplay = document.getElementById('goal-percent-display');
+    goalSlider.addEventListener('input', () => {
+        appState.profile.goalReduction = parseInt(goalSlider.value);
+        goalDisplay.textContent = `${appState.profile.goalReduction}%`;
+        updateGoalTracker();
+    });
 }
 
 function updateSliderLabelDisplays() {
@@ -372,6 +388,7 @@ function updateSliderLabelDisplays() {
     document.getElementById('flights-display').textContent = `${appState.profile.flights} hours`;
     document.getElementById('local-food-display').textContent = `${appState.profile.localFood}%`;
     document.getElementById('spending-display').textContent = `$${appState.profile.spending}`;
+    document.getElementById('goal-percent-display').textContent = `${appState.profile.goalReduction}%`;
 }
 
 // Tab navigation handler
@@ -404,10 +421,14 @@ function setupTabNavigation() {
         item.addEventListener('click', () => {
             const tab = item.getAttribute('data-tab');
             
-            navItems.forEach(i => i.classList.remove('active'));
+            navItems.forEach(i => {
+                i.classList.remove('active');
+                i.setAttribute('aria-selected', 'false');
+            });
             tabContents.forEach(c => c.classList.remove('active'));
             
             item.classList.add('active');
+            item.setAttribute('aria-selected', 'true');
             document.getElementById(`${tab}-tab`).classList.add('active');
             
             tabTitle.textContent = tabDetails[tab].title;
@@ -423,6 +444,33 @@ function setupTabNavigation() {
                 renderInsightsAndBadges();
             }
         });
+    });
+}
+
+// Keyboard Navigation for sidebar tabs (WAI-ARIA compliance)
+function setupKeyboardTabs() {
+    const navMenu = document.querySelector('.nav-menu');
+    const tabs = Array.from(document.querySelectorAll('.nav-item'));
+    
+    navMenu.addEventListener('keydown', (e) => {
+        const activeIndex = tabs.findIndex(t => t.classList.contains('active'));
+        let newIndex = -1;
+        
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+            newIndex = (activeIndex + 1) % tabs.length;
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            newIndex = (activeIndex - 1 + tabs.length) % tabs.length;
+        } else if (e.key === 'Home') {
+            newIndex = 0;
+        } else if (e.key === 'End') {
+            newIndex = tabs.length - 1;
+        }
+        
+        if (newIndex !== -1) {
+            e.preventDefault();
+            tabs[newIndex].focus();
+            tabs[newIndex].click();
+        }
     });
 }
 
@@ -553,6 +601,26 @@ function calculateFootprint() {
     };
 }
 
+function updateGoalTracker() {
+    const scores = calculateFootprint();
+    const currentScore = scores.total;
+    const targetScore = scores.gross * (1 - appState.profile.goalReduction / 100);
+    
+    document.getElementById('goal-current-val').textContent = `${currentScore.toFixed(1)} Tons`;
+    document.getElementById('goal-target-val').textContent = `${targetScore.toFixed(1)} Tons`;
+    
+    const statusMsg = document.getElementById('goal-status-msg');
+    
+    if (currentScore <= targetScore) {
+        statusMsg.textContent = "🎉 Goal Achieved! Outstanding sustainability efforts!";
+        statusMsg.className = "goal-status-box achieved";
+    } else {
+        const diff = currentScore - targetScore;
+        statusMsg.textContent = `Reduce footprint by ${diff.toFixed(1)} Tons to meet target`;
+        statusMsg.className = "goal-status-box behind";
+    }
+}
+
 // Update the dashboard values and visualizations
 function updateDashboard() {
     const scores = calculateFootprint();
@@ -583,6 +651,7 @@ function updateDashboard() {
     }
     
     renderBreakdownChart(scores);
+    updateGoalTracker();
     
     document.getElementById('header-saved-co2').textContent = `${appState.co2SavedToday.toFixed(1)} kg`;
     document.getElementById('header-active-habits').textContent = appState.activeHabits.length;
@@ -643,6 +712,7 @@ function renderBreakdownChart(scores) {
 function generateRecommendations(scores) {
     const container = document.getElementById('dashboard-recommendations');
     container.innerHTML = '';
+    
     const categories = [
         { name: 'energy', value: scores.energy, icon: '🏠', actions: [
             { title: 'Switch to LED Lighting', desc: 'Replace halogen bulbs with energy-efficient LEDs.', saving: 'Saves 0.25T/yr', habitId: 'ledBulbs' },
@@ -657,7 +727,9 @@ function generateRecommendations(scores) {
             { title: 'Buy Local and Organic', desc: 'Buying food with low air miles reduces supply chain logistics emissions.', saving: 'Saves up to 0.40T/yr', habitId: 'localFood' }
         ]}
     ];
+    
     categories.sort((a, b) => b.value - a.value);
+    
     let added = 0;
     categories.forEach(cat => {
         cat.actions.forEach(action => {
@@ -665,29 +737,68 @@ function generateRecommendations(scores) {
             if (!alreadyActive && added < 2) {
                 const card = document.createElement('div');
                 card.className = 'rec-card';
-                card.innerHTML = `
-                    <div class="rec-icon">${cat.icon}</div>
-                    <div class="rec-details">
-                        <span class="rec-title">${action.title}</span>
-                        <span class="rec-desc">${action.desc}</span>
-                        <span class="rec-saving">${action.saving}</span>
-                    </div>
-                `;
+                
+                const icon = document.createElement('div');
+                icon.className = 'rec-icon';
+                icon.textContent = cat.icon;
+                
+                const details = document.createElement('div');
+                details.className = 'rec-details';
+                
+                const title = document.createElement('span');
+                title.className = 'rec-title';
+                title.textContent = action.title;
+                
+                const desc = document.createElement('span');
+                desc.className = 'rec-desc';
+                desc.textContent = action.desc;
+                
+                const saving = document.createElement('span');
+                saving.className = 'rec-saving';
+                saving.textContent = action.saving;
+                
+                details.appendChild(title);
+                details.appendChild(desc);
+                details.appendChild(saving);
+                
+                card.appendChild(icon);
+                card.appendChild(details);
                 container.appendChild(card);
                 added++;
             }
         });
     });
+    
     if (added === 0) {
-        container.innerHTML = `
-            <div class="rec-card" style="grid-column: span 2; justify-content: center; padding: 2rem;">
-                <div class="rec-icon">🏆</div>
-                <div class="rec-details" style="align-items: center; text-align: center;">
-                    <span class="rec-title">Eco Champion Status!</span>
-                    <span class="rec-desc">You have activated all recommended habits! Keep maintaining your green lifestyle.</span>
-                </div>
-            </div>
-        `;
+        const card = document.createElement('div');
+        card.className = 'rec-card';
+        card.style.gridColumn = 'span 2';
+        card.style.justifyContent = 'center';
+        card.style.padding = '2rem';
+        
+        const icon = document.createElement('div');
+        icon.className = 'rec-icon';
+        icon.textContent = '🏆';
+        
+        const details = document.createElement('div');
+        details.className = 'rec-details';
+        details.style.alignItems = 'center';
+        details.style.textAlign = 'center';
+        
+        const title = document.createElement('span');
+        title.className = 'rec-title';
+        title.textContent = 'Eco Champion Status!';
+        
+        const desc = document.createElement('span');
+        desc.className = 'rec-desc';
+        desc.textContent = 'You have activated all recommended habits! Keep maintaining your green lifestyle.';
+        
+        details.appendChild(title);
+        details.appendChild(desc);
+        
+        card.appendChild(icon);
+        card.appendChild(details);
+        container.appendChild(card);
     }
 }
 
@@ -722,20 +833,53 @@ function renderHabitsList() {
     habitsData.forEach(habit => {
         const item = document.createElement('div');
         item.className = 'habit-item';
-        const isChecked = appState.activeHabits.includes(habit.id) ? 'checked' : '';
+        
+        const isChecked = appState.activeHabits.includes(habit.id);
         const impactClass = habit.impact === 'High' ? 'impact-high' : (habit.impact === 'Medium' ? 'impact-med' : 'impact-low');
-        item.innerHTML = `
-            <div class="habit-details">
-                <span class="habit-name">${habit.icon} ${habit.name}</span>
-                <span class="habit-impact">Impact: <span class="${impactClass}">${habit.impact}</span> (Saves ${(habit.saving * 1000).toFixed(0)} kg CO2e/yr)</span>
-            </div>
-            <label class="habit-toggle-switch">
-                <input type="checkbox" id="chk-${habit.id}" ${isChecked} data-habit="${habit.id}">
-                <span class="toggle-slider"></span>
-            </label>
-        `;
+        
+        const details = document.createElement('div');
+        details.className = 'habit-details';
+        
+        const name = document.createElement('span');
+        name.className = 'habit-name';
+        name.textContent = `${habit.icon} ${habit.name}`;
+        
+        const impact = document.createElement('span');
+        impact.className = 'habit-impact';
+        impact.textContent = 'Impact: ';
+        
+        const impactSpan = document.createElement('span');
+        impactSpan.className = impactClass;
+        impactSpan.textContent = habit.impact;
+        
+        const impactText = document.createTextNode(` (Saves ${(habit.saving * 1000).toFixed(0)} kg CO2e/yr)`);
+        
+        impact.appendChild(impactSpan);
+        impact.appendChild(impactText);
+        details.appendChild(name);
+        details.appendChild(impact);
+        
+        const toggleLabel = document.createElement('label');
+        toggleLabel.className = 'habit-toggle-switch';
+        toggleLabel.setAttribute('for', `chk-${habit.id}`);
+        
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.id = `chk-${habit.id}`;
+        input.checked = isChecked;
+        input.setAttribute('data-habit', habit.id);
+        
+        const slider = document.createElement('span');
+        slider.className = 'toggle-slider';
+        
+        toggleLabel.appendChild(input);
+        toggleLabel.appendChild(slider);
+        
+        item.appendChild(details);
+        item.appendChild(toggleLabel);
         list.appendChild(item);
-        document.getElementById(`chk-${habit.id}`).addEventListener('change', (e) => {
+        
+        input.addEventListener('change', (e) => {
             const habitId = e.target.getAttribute('data-habit');
             if (e.target.checked) {
                 if (!appState.activeHabits.includes(habitId)) {
@@ -775,37 +919,32 @@ function renderInsightsAndBadges() {
     }
     const adviceContainer = document.getElementById('personalized-advice');
     adviceContainer.innerHTML = '';
+    
+    function addAdvice(titleText, bodyText, type = '') {
+        const item = document.createElement('div');
+        item.className = `advice-item ${type}`.trim();
+        const title = document.createElement('div');
+        title.className = 'advice-title';
+        title.textContent = titleText;
+        const body = document.createElement('div');
+        body.className = 'advice-text';
+        body.textContent = bodyText;
+        item.appendChild(title);
+        item.appendChild(body);
+        adviceContainer.appendChild(item);
+    }
+    
     const maxVal = Math.max(scores.energy, scores.transport, scores.diet, scores.waste);
     if (maxVal === scores.transport && scores.transport > 1.5) {
-        adviceContainer.innerHTML += `
-            <div class="advice-item warning">
-                <div class="advice-title">High Transit Emissions</div>
-                <div class="advice-text">Transportation represents your single largest carbon output. Swapping vehicle trips for public transit or carpooling could reduce your score by over 1.2 Tons annually.</div>
-            </div>
-        `;
+        addAdvice('High Transit Emissions', 'Transportation represents your single largest carbon output. Swapping vehicle trips for public transit or carpooling could reduce your score by over 1.2 Tons annually.', 'warning');
     }
     if (maxVal === scores.energy && scores.energy > 1.5) {
-        adviceContainer.innerHTML += `
-            <div class="advice-item warning">
-                <div class="advice-title">Heavy Home Energy Demand</div>
-                <div class="advice-text">Your home energy bills contribute significantly to greenhouse gases. Consider purchasing green tariffs from your utility or setting thermostats to a 2°C offset to reduce emissions.</div>
-            </div>
-        `;
+        addAdvice('Heavy Home Energy Demand', 'Your home energy bills contribute significantly to greenhouse gases. Consider purchasing green tariffs from your utility or setting thermostats to a 2°C offset to reduce emissions.', 'warning');
     }
     if (scores.total > 2.0) {
-        adviceContainer.innerHTML += `
-            <div class="advice-item info">
-                <div class="advice-title">Road to Paris Accord</div>
-                <div class="advice-text">To meet standard global targets, seek to reduce emissions below 2.0 Metric Tons. Adopting green dietary options or rooftop solar are high-impact steps.</div>
-            </div>
-        `;
+        addAdvice('Road to Paris Accord', 'To meet standard global targets, seek to reduce emissions below 2.0 Metric Tons. Adopting green dietary options or rooftop solar are high-impact steps.', 'info');
     } else {
-        adviceContainer.innerHTML += `
-            <div class="advice-item">
-                <div class="advice-title">Paris Target Aligned!</div>
-                <div class="advice-text">Fantastic job! Your footprint is under the sustainable 2.0 Tons limit. Log daily actions to continuously offset remaining public shares.</div>
-            </div>
-        `;
+        addAdvice('Paris Target Aligned!', 'Fantastic job! Your footprint is under the sustainable 2.0 Tons limit. Log daily actions to continuously offset remaining public shares.');
     }
     renderOffsetCalculations();
     updateComparisonChart();
@@ -911,11 +1050,22 @@ function renderBadgesList(scores) {
         const item = document.createElement('div');
         const isUnlocked = levels[badge.id];
         item.className = `badge-item ${isUnlocked ? 'unlocked' : ''}`;
-        item.innerHTML = `
-            <div class="badge-icon">${isUnlocked ? badge.icon : '🔒'}</div>
-            <span class="badge-name">${badge.name}</span>
-            <span class="badge-desc">${badge.desc}</span>
-        `;
+        
+        const icon = document.createElement('div');
+        icon.className = 'badge-icon';
+        icon.textContent = isUnlocked ? badge.icon : '🔒';
+        
+        const name = document.createElement('span');
+        name.className = 'badge-name';
+        name.textContent = badge.name;
+        
+        const desc = document.createElement('span');
+        desc.className = 'badge-desc';
+        desc.textContent = badge.desc;
+        
+        item.appendChild(icon);
+        item.appendChild(name);
+        item.appendChild(desc);
         container.appendChild(item);
     });
 }
@@ -924,7 +1074,13 @@ function renderHistoryLog() {
     const tbody = document.getElementById('history-log-body');
     tbody.innerHTML = '';
     if (appState.history.length === 0) {
-        tbody.innerHTML = `<tr class="empty-row"><td colspan="4">No actions logged today yet. Log an action to begin!</td></tr>`;
+        const row = document.createElement('tr');
+        row.className = 'empty-row';
+        const td = document.createElement('td');
+        td.colSpan = 4;
+        td.textContent = 'No actions logged today yet. Log an action to begin!';
+        row.appendChild(td);
+        tbody.appendChild(row);
         return;
     }
     const reversedHistory = [...appState.history].reverse().slice(0, 10);
@@ -933,12 +1089,22 @@ function renderHistoryLog() {
         const dateStr = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const co2SavedStr = log.co2Saved > 0 ? `${log.co2Saved.toFixed(1)} kg` : '-';
         const xpStr = log.xpEarned > 0 ? `+${log.xpEarned} XP` : '-';
-        row.innerHTML = `
-            <td>${dateStr}</td>
-            <td>${log.action}</td>
-            <td class="history-co2-saved">${co2SavedStr}</td>
-            <td class="history-xp">${xpStr}</td>
-        `;
+        
+        const tdDate = document.createElement('td');
+        tdDate.textContent = dateStr;
+        const tdAction = document.createElement('td');
+        tdAction.textContent = log.action;
+        const tdCo2 = document.createElement('td');
+        tdCo2.className = 'history-co2-saved';
+        tdCo2.textContent = co2SavedStr;
+        const tdXp = document.createElement('td');
+        tdXp.className = 'history-xp';
+        tdXp.textContent = xpStr;
+        
+        row.appendChild(tdDate);
+        row.appendChild(tdAction);
+        row.appendChild(tdCo2);
+        row.appendChild(tdXp);
         tbody.appendChild(row);
     });
 }
@@ -952,7 +1118,6 @@ function logAction(action, co2Saved, xpEarned) {
     });
 }
 
-// Award XP
 function awardXP(amount) {
     appState.xp += amount;
     updateProfileWidget();
@@ -965,3 +1130,4 @@ function updateProfileWidget() {
     document.getElementById('profile-xp').textContent = currentXpInLevel;
     document.getElementById('profile-xp-bar').style.width = `${currentXpInLevel}%`;
 }
+})();
